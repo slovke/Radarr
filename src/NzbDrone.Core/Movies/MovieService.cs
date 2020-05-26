@@ -11,7 +11,6 @@ using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Events;
 using NzbDrone.Core.Movies.Events;
 using NzbDrone.Core.NetImport.ImportExclusions;
-using NzbDrone.Core.Organizer;
 using NzbDrone.Core.Parser;
 using NzbDrone.Core.Parser.RomanNumerals;
 
@@ -54,14 +53,12 @@ namespace NzbDrone.Core.Movies
         private readonly IMovieRepository _movieRepository;
         private readonly IConfigService _configService;
         private readonly IEventAggregator _eventAggregator;
-        private readonly IBuildFileNames _fileNameBuilder;
         private readonly IImportExclusionsService _exclusionService;
         private readonly IBuildMoviePaths _moviePathBuilder;
         private readonly Logger _logger;
 
         public MovieService(IMovieRepository movieRepository,
                              IEventAggregator eventAggregator,
-                             IBuildFileNames fileNameBuilder,
                              IConfigService configService,
                              IImportExclusionsService exclusionService,
                              IBuildMoviePaths moviePathBuilder,
@@ -69,7 +66,6 @@ namespace NzbDrone.Core.Movies
         {
             _movieRepository = movieRepository;
             _eventAggregator = eventAggregator;
-            _fileNameBuilder = fileNameBuilder;
             _configService = configService;
             _exclusionService = exclusionService;
             _moviePathBuilder = moviePathBuilder;

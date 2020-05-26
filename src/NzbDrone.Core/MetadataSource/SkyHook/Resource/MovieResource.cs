@@ -33,5 +33,6 @@ namespace NzbDrone.Core.MetadataSource.SkyHook.Resource
         public CollectionResource Collection { get; set; }
         public string OriginalLanguage { get; set; }
         public string Homepage { get; set; }
+        public List<RecommednationResource> Recommendations { get; set; }
     }
 }

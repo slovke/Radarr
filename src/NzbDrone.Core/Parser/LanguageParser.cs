@@ -192,7 +192,7 @@ namespace NzbDrone.Core.Parser
 
             if (!languages.Any())
             {
-                languages.Add(Language.English);
+                languages.Add(Language.Unknown);
             }
 
             return languages.DistinctBy(l => (int)l).ToList();

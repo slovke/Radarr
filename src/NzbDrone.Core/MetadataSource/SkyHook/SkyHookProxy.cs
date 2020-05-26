@@ -140,10 +140,14 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
             movie.Overview = resource.Overview;
 
             movie.AlternativeTitles.AddRange(resource.AlternativeTitles.Select(MapAlternativeTitle));
+            movie.AlternativeTitles.AddRange(resource.Translations.Select(MapTranslation).Where(t => t.Language != null).DistinctBy(m => new { m.CleanTitle, m.Language }));
+
+            movie.OriginalLanguage = IsoLanguages.Find(resource.OriginalLanguage.ToLower())?.Language ?? Language.English;
 
             movie.Website = resource.Homepage;
             movie.InCinemas = resource.InCinema;
             movie.PhysicalRelease = resource.PhysicalRelease;
+            movie.Recommendations = resource.Recommendations.Select(r => r.TmdbId).ToList();
 
             movie.Year = resource.Year;
 
@@ -440,6 +444,19 @@ namespace NzbDrone.Core.MetadataSource.SkyHook
                 SourceType = SourceType.TMDB,
                 CleanTitle = arg.Title.CleanSeriesTitle(),
                 Language = IsoLanguages.Find(arg.Language.ToLower())?.Language ?? Language.English
+            };
+
+            return newAlternativeTitle;
+        }
+
+        private static AlternativeTitle MapTranslation(TranslationResource arg)
+        {
+            var newAlternativeTitle = new AlternativeTitle
+            {
+                Title = arg.Title,
+                SourceType = SourceType.Translation,
+                CleanTitle = arg.Title.CleanSeriesTitle(),
+                Language = IsoLanguages.Find(arg.Language.ToLower())?.Language
             };
 
             return newAlternativeTitle;

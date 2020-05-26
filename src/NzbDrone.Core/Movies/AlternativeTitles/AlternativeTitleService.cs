@@ -73,24 +73,27 @@ namespace NzbDrone.Core.Movies.AlternativeTitles
         {
             int movieId = movie.Id;
 
+            var deduplicatedTitles = new List<AlternativeTitle>();
+
             // First update the movie ids so we can correlate them later.
             titles.ForEach(t => t.MovieId = movieId);
 
-            // Then make sure none of them are the same as the main title.
-            titles = titles.Where(t => t.CleanTitle != movie.CleanTitle).ToList();
+            // Add all translations
+            deduplicatedTitles.AddRange(titles.Where(t => t.SourceType == SourceType.Translation));
+
+            // Then make sure none of others are the same as the main title.
+            var mappingTitles = titles.Where(t => t.SourceType != SourceType.Translation).Where(t => t.CleanTitle != movie.CleanTitle).ToList();
 
             // Then make sure they are all distinct titles
-            titles = titles.DistinctBy(t => t.CleanTitle).ToList();
+            deduplicatedTitles.AddRange(mappingTitles.DistinctBy(t => t.CleanTitle).ToList());
 
             // Now find titles to delete, update and insert.
             var existingTitles = _titleRepo.FindByMovieId(movieId);
 
-            var insert = titles.Where(t => !existingTitles.Contains(t));
-            var update = existingTitles.Where(t => titles.Contains(t));
-            var delete = existingTitles.Where(t => !titles.Contains(t));
+            var insert = deduplicatedTitles.Where(t => !existingTitles.Any(e => e.CleanTitle == t.CleanTitle && e.Language == t.Language && e.SourceType == t.SourceType));
+            var delete = existingTitles.Where(e => !deduplicatedTitles.Any(t => t.CleanTitle == e.CleanTitle && t.Language == e.Language && t.SourceType == e.SourceType));
 
             _titleRepo.DeleteMany(delete.ToList());
-            _titleRepo.UpdateMany(update.ToList());
             _titleRepo.InsertMany(insert.ToList());
 
             return titles;

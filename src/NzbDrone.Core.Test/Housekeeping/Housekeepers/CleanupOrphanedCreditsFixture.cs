@@ -2,6 +2,7 @@ using FizzWare.NBuilder;
 using FluentAssertions;
 using NUnit.Framework;
 using NzbDrone.Core.Housekeeping.Housekeepers;
+using NzbDrone.Core.Languages;
 using NzbDrone.Core.Movies;
 using NzbDrone.Core.Movies.Credits;
 using NzbDrone.Core.Test.Framework;
@@ -27,7 +28,7 @@ namespace NzbDrone.Core.Test.Housekeeping.Housekeepers
         [Test]
         public void should_not_delete_unorphaned_credit_items()
         {
-            var movie = Builder<Movie>.CreateNew().BuildNew();
+            var movie = Builder<Movie>.CreateNew().With(c => c.OriginalLanguage = Language.English).BuildNew();
 
             Db.Insert(movie);
 

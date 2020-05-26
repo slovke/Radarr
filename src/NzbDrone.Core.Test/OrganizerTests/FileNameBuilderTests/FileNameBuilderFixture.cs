@@ -6,9 +6,11 @@ using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using NzbDrone.Core.CustomFormats;
+using NzbDrone.Core.Languages;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.MediaInfo;
 using NzbDrone.Core.Movies;
+using NzbDrone.Core.Movies.AlternativeTitles;
 using NzbDrone.Core.Organizer;
 using NzbDrone.Core.Qualities;
 using NzbDrone.Core.Test.Framework;
@@ -31,8 +33,22 @@ namespace NzbDrone.Core.Test.OrganizerTests.FileNameBuilderTests
                     .With(s => s.Title = "South Park")
                     .Build();
 
+            _movie.AlternativeTitles.Add(new AlternativeTitle
+            {
+                SourceType = SourceType.Translation,
+                Language = Language.German,
+                Title = "German South Park"
+            });
+
+            _movie.AlternativeTitles.Add(new AlternativeTitle
+            {
+                SourceType = SourceType.Translation,
+                Language = Language.French,
+                Title = "French South Park"
+            });
+
             _namingConfig = NamingConfig.Default;
-            _namingConfig.RenameEpisodes = true;
+            _namingConfig.RenameMovies = true;
 
             Mocker.GetMock<INamingConfigService>()
                   .Setup(c => c.GetConfig()).Returns(_namingConfig);
@@ -122,6 +138,42 @@ namespace NzbDrone.Core.Test.OrganizerTests.FileNameBuilderTests
         }
 
         [Test]
+        public void should_replace_translated_movie_title()
+        {
+            _namingConfig.StandardMovieFormat = "{Movie Title:FR}";
+
+            Subject.BuildFileName(_movie, _movieFile)
+                   .Should().Be("French South Park");
+        }
+
+        [Test]
+        public void should_replace_translated_movie_title_with_original_if_no_translation_exists()
+        {
+            _namingConfig.StandardMovieFormat = "{Movie Title:JP}";
+
+            Subject.BuildFileName(_movie, _movieFile)
+                   .Should().Be("South Park");
+        }
+
+        [Test]
+        public void should_replace_translated_movie_title_with_fallback_if_no_translation_exists()
+        {
+            _namingConfig.StandardMovieFormat = "{Movie Title:JP|FR}";
+
+            Subject.BuildFileName(_movie, _movieFile)
+                   .Should().Be("French South Park");
+        }
+
+        [Test]
+        public void should_replace_translated_movie_title_with_original_if_no_translation_or_fallback_exists()
+        {
+            _namingConfig.StandardMovieFormat = "{Movie Title:JP|CN}";
+
+            Subject.BuildFileName(_movie, _movieFile)
+                   .Should().Be("South Park");
+        }
+
+        [Test]
         public void should_cleanup_Movie_Title()
         {
             _namingConfig.StandardMovieFormat = "{Movie.CleanTitle}";
@@ -172,7 +224,7 @@ namespace NzbDrone.Core.Test.OrganizerTests.FileNameBuilderTests
         [Test]
         public void use_file_name_when_sceneName_is_null()
         {
-            _namingConfig.RenameEpisodes = false;
+            _namingConfig.RenameMovies = false;
             _movieFile.RelativePath = "30 Rock - S01E01 - Test";
 
             Subject.BuildFileName(_movie, _movieFile)
@@ -182,7 +234,7 @@ namespace NzbDrone.Core.Test.OrganizerTests.FileNameBuilderTests
         [Test]
         public void use_path_when_sceneName_and_relative_path_are_null()
         {
-            _namingConfig.RenameEpisodes = false;
+            _namingConfig.RenameMovies = false;
             _movieFile.RelativePath = null;
             _movieFile.Path = @"C:\Test\Unsorted\Movie - S01E01 - Test";
 
@@ -193,7 +245,7 @@ namespace NzbDrone.Core.Test.OrganizerTests.FileNameBuilderTests
         [Test]
         public void use_file_name_when_sceneName_is_not_null()
         {
-            _namingConfig.RenameEpisodes = false;
+            _namingConfig.RenameMovies = false;
             _movieFile.SceneName = "30.Rock.S01E01.xvid-LOL";
             _movieFile.RelativePath = "30 Rock - S01E01 - Test";
 
@@ -317,7 +369,7 @@ namespace NzbDrone.Core.Test.OrganizerTests.FileNameBuilderTests
         [Test]
         public void should_use_existing_filename_when_scene_name_is_not_available()
         {
-            _namingConfig.RenameEpisodes = true;
+            _namingConfig.RenameMovies = true;
             _namingConfig.StandardMovieFormat = "{Original Title}";
 
             _movieFile.SceneName = null;

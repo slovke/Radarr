@@ -126,7 +126,7 @@ namespace NzbDrone.Core.Test.ParserTests
         {
             var parsed = Parser.Parser.ParseMovieTitle(postTitle, true);
             parsed.Languages.Count().Should().Be(1);
-            parsed.Languages.First().Should().Be(Language.English);
+            parsed.Languages.First().Should().Be(Language.Unknown);
         }
 
         [TestCase("123", "tt0000123")]

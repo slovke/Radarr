@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Nancy;
+using NzbDrone.Core.Configuration;
 using NzbDrone.Core.DecisionEngine.Specifications;
+using NzbDrone.Core.Languages;
 using NzbDrone.Core.Movies;
 using NzbDrone.SignalR;
 using Radarr.Api.V3.Movies;
@@ -14,14 +16,17 @@ namespace Radarr.Api.V3.Calendar
     {
         private readonly IMovieService _moviesService;
         private readonly IUpgradableSpecification _qualityUpgradableSpecification;
+        private readonly IConfigService _configService;
 
         public CalendarModule(IBroadcastSignalRMessage signalR,
                             IMovieService moviesService,
-                            IUpgradableSpecification qualityUpgradableSpecification)
+                            IUpgradableSpecification qualityUpgradableSpecification,
+                            IConfigService configService)
             : base(signalR, "calendar")
         {
             _moviesService = moviesService;
             _qualityUpgradableSpecification = qualityUpgradableSpecification;
+            _configService = configService;
 
             GetResourceAll = GetCalendar;
         }
@@ -63,7 +68,7 @@ namespace Radarr.Api.V3.Calendar
                 return null;
             }
 
-            var resource = movie.ToResource(_qualityUpgradableSpecification);
+            var resource = movie.ToResource(_qualityUpgradableSpecification, (Language)_configService.MovieInfoLanguage);
 
             return resource;
         }
